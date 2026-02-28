@@ -17,14 +17,13 @@ const { chromium } = require('playwright');
 
     await page.goto(url, { waitUntil: "load", timeout: 60000 });
 
-    // Hard wait to allow module JS execution
-    await page.waitForTimeout(3000);
+    // Get full HTML content
+    const html = await page.content();
 
-    const numbers = await page.$$eval("td", cells =>
-      cells
-        .map(td => parseInt(td.textContent.trim(), 10))
-        .filter(n => !isNaN(n))
-    );
+    // Extract all numbers between <td> tags using regex
+    const matches = [...html.matchAll(/<td>(\d+)<\/td>/g)];
+
+    const numbers = matches.map(m => parseInt(m[1], 10));
 
     const sum = numbers.reduce((a, b) => a + b, 0);
 
