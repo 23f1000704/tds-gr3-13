@@ -16,15 +16,11 @@ const { chromium } = require('playwright');
 
     await page.goto(url, { waitUntil: "domcontentloaded" });
 
-    // Wait for dynamic JS to finish
-    await page.waitForLoadState("networkidle");
-
-    // Wait for table to exist in DOM
-    await page.waitForSelector("table", { state: "attached", timeout: 60000 });
+    // NO WAITING NEEDED
 
     const numbers = await page.$$eval("table td", cells =>
       cells
-        .map(td => parseFloat(td.innerText.trim()))
+        .map(td => parseFloat(td.textContent.trim()))
         .filter(n => !isNaN(n))
     );
 
