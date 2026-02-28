@@ -15,21 +15,12 @@ const { chromium } = require('playwright');
 
     console.log(`Visiting Seed ${seed}...`);
 
-    await page.goto(url, {
-      waitUntil: "load",
-      timeout: 60000
-    });
+    await page.goto(url, { waitUntil: "load", timeout: 60000 });
 
-    // Ensure JS modules fully executed
-    await page.waitForLoadState("networkidle");
+    // Hard wait to allow module JS execution
+    await page.waitForTimeout(3000);
 
-    // Wait until table appears inside #table
-    await page.waitForFunction(() => {
-      const container = document.querySelector("#table");
-      return container && container.innerHTML.includes("<table>");
-    }, { timeout: 60000 });
-
-    const numbers = await page.$$eval("#table table td", cells =>
+    const numbers = await page.$$eval("td", cells =>
       cells
         .map(td => parseInt(td.textContent.trim(), 10))
         .filter(n => !isNaN(n))
