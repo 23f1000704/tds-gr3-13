@@ -2,6 +2,7 @@ const { chromium } = require('playwright');
 
 (async () => {
   const browser = await chromium.launch({
+    headless: true,
     args: ['--no-sandbox', '--disable-setuid-sandbox']
   });
 
@@ -14,12 +15,18 @@ const { chromium } = require('playwright');
 
     console.log(`Visiting Seed ${seed}...`);
 
-    await page.goto(url, { waitUntil: "domcontentloaded" });
+    await page.goto(url, {
+      waitUntil: "load",
+      timeout: 60000
+    });
 
-    // Wait until table is injected inside #table
+    // Ensure JS modules fully executed
+    await page.waitForLoadState("networkidle");
+
+    // Wait until table appears inside #table
     await page.waitForFunction(() => {
       const container = document.querySelector("#table");
-      return container && container.querySelector("table");
+      return container && container.innerHTML.includes("<table>");
     }, { timeout: 60000 });
 
     const numbers = await page.$$eval("#table table td", cells =>
