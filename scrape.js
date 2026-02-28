@@ -1,7 +1,10 @@
 const { chromium } = require('playwright');
 
 (async () => {
-  const browser = await chromium.launch();
+  const browser = await chromium.launch({
+    args: ['--no-sandbox', '--disable-setuid-sandbox']
+  });
+
   const page = await browser.newPage();
 
   let grandTotal = 0;
@@ -9,20 +12,24 @@ const { chromium } = require('playwright');
   for (let seed = 11; seed <= 20; seed++) {
     const url = `https://sanand0.github.io/tdsdata/table_sum/index.html?seed=${seed}`;
 
-    await page.goto(url, { waitUntil: 'networkidle' });
+    console.log(`Visiting Seed ${seed}...`);
 
-    // Wait for tables to load
-    await page.waitForSelector("table");
+    await page.goto(url, { waitUntil: "domcontentloaded" });
 
-    // Extract all numbers from all tables
+    // Wait for dynamic JS to finish
+    await page.waitForLoadState("networkidle");
+
+    // Wait for table to exist in DOM
+    await page.waitForSelector("table", { state: "attached", timeout: 60000 });
+
     const numbers = await page.$$eval("table td", cells =>
-      cells.map(td => {
-        const val = td.innerText.trim();
-        return parseFloat(val);
-      }).filter(n => !isNaN(n))
+      cells
+        .map(td => parseFloat(td.innerText.trim()))
+        .filter(n => !isNaN(n))
     );
 
     const sum = numbers.reduce((a, b) => a + b, 0);
+
     console.log(`Seed ${seed} sum: ${sum}`);
 
     grandTotal += sum;
